@@ -26,25 +26,20 @@ module.exports = (app, upload) => {
     [check("Amenities").not().isEmpty().trim().escape()],
     product.createProperties
   );
-  router.post(
-    "/createCustomProduct",
-    authenticate,
-    product.createCustomProduct
-  );
   router.delete(
-    "/deleteProduct/:productId", authenticate, product.deleteProduct
+    "/deleteProperty/:PropertyId", product.deleteProperty
   );
   router.put(
-    "/editProduct/:productId",Upload_Image,authenticate, product.editProduct
+    "/editProperty/:PropertyId",Upload_Image, product.editProperty
   );
   router.get(
-    "/getAllProducts", product.getAllProducts
+    "/getAllProperties", product.getAllProperties
   );
+  // router.get(
+  //   "/getProductsByCategory", product.getProductsByCategory
+  // );
   router.get(
-    "/getProductsByCategory", product.getProductsByCategory
-  );
-  router.get(
-    "/getProduct/:productId", product.getProduct
+    "/getProperty/:PropertyId", product.getProperty
   );
 
   app.use("/api/properties", router);

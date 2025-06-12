@@ -17,14 +17,14 @@ module.exports = (app) => {
     user.Signup
   );
 
-  // router.post(
-  //   "/Signin",
-  //   [
-  //     check("email").not().isEmpty().trim().escape(),
-  //     check("password").not().isEmpty().trim().escape(),
-  //   ],
-  //   user.Signin
-  // );
+  router.post(
+    "/Signin",
+    [
+      check("email").not().isEmpty().trim().escape(),
+      check("password").not().isEmpty().trim().escape(),
+    ],
+    user.Signin
+  );
   router.put(
     "/Edituser/:userId",
     authenticate,

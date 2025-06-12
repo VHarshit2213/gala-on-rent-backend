@@ -33,35 +33,35 @@ exports.Signup = async (req, res) => {
   });
 };
 
-// exports.Signin = async (req, res) => {
-//   res.header("Access-Control-Allow-Origin", "*");
-//   User.findOne({ email: req.body.email }).then(async (user) => {
-//     if (!user) {
-//       res.json({
-//         message: "email not found",
-//         status: 400,
-//       });
-//     } else {
-//       if (user.password == req.body.password) {
-//         try {
-//           res.json({
-//             message: "User login Successfully",
-//             status: 200,
-//             token: jwt.sign(user.id, "dont_be_oversmart"),
-//             data: user,
-//           });
-//         } catch (err) {
-//           res.json({ message: err, status: 400 });
-//         }
-//       } else {
-//         res.json({
-//           message: "invalid password",
-//           status: 400,
-//         });
-//       }
-//     }
-//   });
-// };
+exports.Signin = async (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  User.findOne({ email: req.body.email }).then(async (user) => {
+    if (!user) {
+      res.json({
+        message: "email not found",
+        status: 400,
+      });
+    } else {
+      if (user.password == req.body.password) {
+        try {
+          res.json({
+            message: "User login Successfully",
+            status: 200,
+            token: jwt.sign(user.id, "dont_be_oversmart"),
+            data: user,
+          });
+        } catch (err) {
+          res.json({ message: err, status: 400 });
+        }
+      } else {
+        res.json({
+          message: "invalid password",
+          status: 400,
+        });
+      }
+    }
+  });
+};
 
 exports.Edituser = async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
