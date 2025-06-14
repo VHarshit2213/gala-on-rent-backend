@@ -13,29 +13,35 @@ exports.getAllProperties = async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
 
   try {
-    const limit = process.env.PAGE_LIMIT;
+    const limit = parseInt(process.env.PAGE_LIMIT) || 20;
     const page = parseInt(req.query.page) || 1;
     const skip = (page - 1) * limit;
 
     const filter = {};
-    if (req.query.category) {
-      filter.category = req.query.category;
+
+    // Optional filtering
+    if (req.query.address) {
+      filter.address = { $regex: req.query.address, $options: 'i' }; // case-insensitive partial match
     }
 
-    // Fetch paginated properties
+    if (req.query.Popular_Area) {
+      filter.Popular_Area = { $regex: req.query.Popular_Area, $options: 'i' };
+    }
+
     const properties = await Properties.find(filter)
-      // .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
     if (properties.length === 0) {
       return res.status(404).json({ message: "No Properties found" });
     }
+
     res.json(properties);
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
 };
+
 
 // exports.getProductsByCategory = async (req, res) => {
 //   try {

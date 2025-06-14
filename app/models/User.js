@@ -34,6 +34,10 @@ const UserSchema = mongoose.Schema({
     type: Date,
     default: Date.now
   },
+  otp:{
+    type: String,
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("Users", UserSchema);

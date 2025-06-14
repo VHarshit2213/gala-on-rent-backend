@@ -35,33 +35,45 @@ exports.Signup = async (req, res) => {
 
 exports.Signin = async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
-  User.findOne({ email: req.body.email }).then(async (user) => {
+
+  try {
+    const { phone_number, otp } = req.body;
+
+    // Find user by phone number
+    const user = await User.findOne({ phone_number });
+
     if (!user) {
-      res.json({
-        message: "email not found",
+      return res.json({
+        message: "Phone number not found",
         status: 400,
       });
-    } else {
-      if (user.password == req.body.password) {
-        try {
-          res.json({
-            message: "User login Successfully",
-            status: 200,
-            token: jwt.sign(user.id, "dont_be_oversmart"),
-            data: user,
-          });
-        } catch (err) {
-          res.json({ message: err, status: 400 });
-        }
-      } else {
-        res.json({
-          message: "invalid password",
-          status: 400,
-        });
-      }
     }
-  });
+
+    // Check if provided OTP matches the one in DB
+    if (!otp || otp !== user.otp) {
+      return res.json({
+        message: "Invalid or missing OTP",
+        status: 400,
+      });
+    }
+
+    // Success: return token and user data
+    return res.json({
+      message: "User logged in successfully",
+      status: 200,
+      token: jwt.sign({ id: user._id }, "dont_be_oversmart"),
+      data: user,
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.json({
+      message: "Server error",
+      status: 500,
+    });
+  }
 };
+
 
 exports.Edituser = async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
