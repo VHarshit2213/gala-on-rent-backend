@@ -3,6 +3,7 @@ const Properties = require("../models/Properties");
 const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require('uuid');
+const he = require("he");
 
 exports.getAllProperties = async (req, res) => {
   const errors = validationResult(req);
@@ -285,8 +286,46 @@ exports.createProperties = async (req, res) => {
 
     // 3. Proceed with creation
     req.body.image = imagePaths;
+
+    let raw_Property_Suitable_For = req.body.Property_Suitable_For;
+    let raw_Type_of_Water_Supply = req.body.Type_of_Water_Supply;
+try {
+  // Step 1: Decode HTML entities
+  raw = he.decode(raw_Property_Suitable_For); // turns &quot; into "
+
+  // Step 2: Parse JSON string
+  const parsed = JSON.parse(raw); // now parses into ["hotel", "bank"]
+
+  // Step 3: Assign cleaned data
+  req.body.Property_Suitable_For = Array.isArray(parsed) ? parsed : [];
+} catch (err) {
+  console.log("Failed to decode/parse Property_Suitable_For:", err.message);
+  req.body.Property_Suitable_For = [];
+}
+try {
+  // Step 1: Decode HTML entities
+  raw = he.decode(raw_Type_of_Water_Supply); // turns &quot; into "
+
+  // Step 2: Parse JSON string
+  const parsed = JSON.parse(raw); // now parses into ["hotel", "bank"]
+
+  // Step 3: Assign cleaned data
+  req.body.Type_of_Water_Supply = Array.isArray(parsed) ? parsed : [];
+} catch (err) {
+  console.log("Failed to decode/parse Type_of_Water_Supply:", err.message);
+  req.body.Type_of_Water_Supply = [];
+}
     const newProduct = new Properties(req.body);
     const savedProduct = await newProduct.save();
+    
+    try {
+      if (typeof savedProduct.property_belongsTo === 'string') {
+        savedProduct.property_belongsTo = he.decode(savedProduct.property_belongsTo);
+      }
+    } catch (e) {
+      savedProduct.property_belongsTo = [];
+    }
+    
 
     res.status(200).json({ status: 200, data: savedProduct });
   } catch (error) {
