@@ -34,7 +34,7 @@ const UserSchema = mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  otp:{
+  uniqueCode:{
     type: String,
     required: true,
   },

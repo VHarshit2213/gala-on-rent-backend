@@ -37,7 +37,7 @@ exports.Signin = async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
 
   try {
-    const { phone_number, otp } = req.body;
+    const { phone_number, uniqueCode } = req.body;
 
     // Find user by phone number
     const user = await User.findOne({ phone_number });
@@ -50,7 +50,7 @@ exports.Signin = async (req, res) => {
     }
 
     // Check if provided OTP matches the one in DB
-    if (!otp || otp !== user.otp) {
+    if (!uniqueCode || uniqueCode !== user.uniqueCode) {
       return res.json({
         message: "Invalid or missing OTP",
         status: 400,
