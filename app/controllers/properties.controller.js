@@ -289,6 +289,7 @@ exports.createProperties = async (req, res) => {
 
     let raw_Property_Suitable_For = req.body.Property_Suitable_For;
     let raw_Type_of_Water_Supply = req.body.Type_of_Water_Supply;
+    let raw_Amenities = req.body.Amenities;
 try {
   // Step 1: Decode HTML entities
   raw = he.decode(raw_Property_Suitable_For); // turns &quot; into "
@@ -302,6 +303,7 @@ try {
   console.log("Failed to decode/parse Property_Suitable_For:", err.message);
   req.body.Property_Suitable_For = [];
 }
+
 try {
   // Step 1: Decode HTML entities
   raw = he.decode(raw_Type_of_Water_Supply); // turns &quot; into "
@@ -314,6 +316,20 @@ try {
 } catch (err) {
   console.log("Failed to decode/parse Type_of_Water_Supply:", err.message);
   req.body.Type_of_Water_Supply = [];
+}
+
+try {
+  // Step 1: Decode HTML entities
+  raw = he.decode(raw_Amenities); // turns &quot; into "
+
+  // Step 2: Parse JSON string
+  const parsed = JSON.parse(raw); // now parses into ["hotel", "bank"]
+
+  // Step 3: Assign cleaned data
+  req.body.Amenities = Array.isArray(parsed) ? parsed : [];
+} catch (err) {
+  console.log("Failed to decode/parse raw_Amenities", err.message);
+  req.body.Amenities = [];
 }
     const newProduct = new Properties(req.body);
     const savedProduct = await newProduct.save();
