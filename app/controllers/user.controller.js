@@ -7,17 +7,19 @@ exports.Signup = async (req, res) => {
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
+  
   res.header("Access-Control-Allow-Origin", "*");
-  User.findOne({ email: req.body.email }).then(async (user) => {
+  User.findOne({ Phone_number: "+91"+req.body.Phone_number }).then(async (user) => {
     if (user) {
       res.json({
-        message: "this email is Already used",
+        message: "this Phone_number is Already used",
         status: 400,
       });
     } else {
       const user = new User(
         req.body
       );
+      user.Phone_number = "+91"+req.body.Phone_number
 
       try {
         const savedUsers = await user.save();
@@ -37,10 +39,10 @@ exports.Signin = async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
 
   try {
-    const { phone_number, uniqueCode } = req.body;
+    const { Phone_number, uniqueCode } = req.body;
 
     // Find user by phone number
-    const user = await User.findOne({ phone_number });
+    const user = await User.findOne({ Phone_number });
 
     if (!user) {
       return res.json({

@@ -439,6 +439,7 @@ try {
 }
 
     req.body.User_id = userId
+    req.body.Phone_number = "+91"+req.body.Phone_number
     const newProduct = new Properties(req.body);
     const savedProduct = await newProduct.save();
     
