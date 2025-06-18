@@ -42,5 +42,5 @@ module.exports = (app, upload) => {
     "/getProperty/:PropertyId", product.getProperty
   );
 
-  app.use("/api/properties", router);
+  app.use("/api/properties",authenticate, router);
 };

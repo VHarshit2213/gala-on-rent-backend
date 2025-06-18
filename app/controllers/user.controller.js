@@ -52,7 +52,7 @@ exports.Signin = async (req, res) => {
     // Check if provided OTP matches the one in DB
     if (!uniqueCode || uniqueCode !== user.uniqueCode) {
       return res.json({
-        message: "Invalid or missing OTP",
+        message: "Invalid or missing uniqueCode",
         status: 400,
       });
     }

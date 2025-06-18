@@ -25,11 +25,23 @@ const PropertiesSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  User_id: {
+    type: String,
+    required: true,
+  },
   Popular_Area: {
     type: String,
     required: true,
   },
   type_of_property : {
+    type: String,
+    required: true,
+  },
+  available_From : {
+    type: String,
+    required: true,
+  },
+  About_the_property : {
     type: String,
     required: true,
   },

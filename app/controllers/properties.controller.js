@@ -1,9 +1,11 @@
 const { check, validationResult } = require("express-validator");
 const Properties = require("../models/Properties");
+const User = require("../models/User");
 const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require('uuid');
 const he = require("he");
+
 
 exports.getAllProperties = async (req, res) => {
   const errors = validationResult(req);
@@ -20,24 +22,31 @@ exports.getAllProperties = async (req, res) => {
 
     const filter = {};
 
-    // Optional filtering
     if (req.query.address) {
-      filter.address = { $regex: req.query.address, $options: 'i' }; // case-insensitive partial match
+      filter.address = { $regex: req.query.address, $options: "i" };
     }
 
     if (req.query.Popular_Area) {
-      filter.Popular_Area = { $regex: req.query.Popular_Area, $options: 'i' };
+      filter.Popular_Area = { $regex: req.query.Popular_Area, $options: "i" };
     }
 
-    const properties = await Properties.find(filter)
-      .skip(skip)
-      .limit(limit);
+    const properties = await Properties.find(filter).skip(skip).limit(limit);
 
     if (properties.length === 0) {
       return res.status(404).json({ message: "No Properties found" });
     }
 
-    res.json(properties);
+    // Attach user data manually
+    const results = await Promise.all(
+      properties.map(async (prop) => {
+        const user = await User.findById(prop.User_id).select("-password");
+        const propObj = prop.toObject();
+        propObj.User_data = user || null;
+        return propObj;
+      })
+    );
+
+    res.status(200).json({ status: 200, data: results });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
@@ -134,21 +143,27 @@ exports.getProperty = async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
 
   try {
+    const userId = req.user._id; // assuming req.user is set by auth middleware
     const propertyId = req.params.PropertyId;
-    const property = await Properties.findById(propertyId);
 
+    const property = await Properties.findById(propertyId);
     if (!property) {
-      return res.status(404).json({ message: "Properties not found" });
+      return res.status(404).json({ message: "Property not found" });
     }
+
+    const userData = await User.findById(userId).select("-password"); // hide sensitive fields like password
+
+    const propertyObject = property.toObject(); // convert Mongoose doc to plain object
+    propertyObject.User_data = userData; // attach user data
+
     res.json({
       status: 200,
-      data: property
+      data: propertyObject,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
 };
-
 
 exports.deleteProperty = async (req, res) => {
     const errors = validationResult(req);
@@ -180,75 +195,166 @@ exports.deleteProperty = async (req, res) => {
     }
 };
 
+// exports.editProperty = async (req, res) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//         return res.status(400).json({ errors: errors.array() });
+//     }
+
+//     res.header("Access-Control-Allow-Origin", "*");
+//     try {
+//         const propertyId = req.params.PropertyId;
+
+//         // Fetch the current property to check its existing images
+//         const property = await Properties.findById(propertyId);
+//         if (!property) {
+//             return res.status(404).json({ message: "Properties not found" });
+//         }
+
+//         // Initialize the array to hold updated image paths
+//         let imagePaths = [...property.image];  // Copy the existing images array
+
+//         // Iterate over the req.body to check each image (image0, image1, etc.)
+//         for (let i = 0; i < 4; i++) {
+//             const imageField = `image${i}`; // image0, image1, image2, image3
+
+//             // Check if there is a file in the current image slot
+//             if (req.files && req.files[imageField]) {
+//                 const newImage = req.files[imageField][0]; // Get the file for the specific image
+
+//                 // Delete the old image if it exists
+//                 if (imagePaths[i]) {
+//                     const oldImagePath = path.join(__dirname, "../..", imagePaths[i]);
+//                     if (fs.existsSync(oldImagePath)) {
+//                         fs.unlinkSync(oldImagePath);
+//                     }
+//                 }
+
+//                 // Process the new image
+//                 const ext = path.extname(newImage.originalname);
+//                 const newPath = "uploads/" + newImage.filename + ext;
+
+//                 // Rename the uploaded file to the new path
+//                 fs.renameSync("uploads/" + newImage.filename, newPath);
+
+//                 // Update the image path in the array
+//                 imagePaths[i] = newPath;
+//             }
+//         }
+
+//         // Update the property with the new image paths
+//         const updatedProduct = await Properties.findByIdAndUpdate(
+//             propertyId,
+//             { ...req.body, image: imagePaths },
+//             { new: true, runValidators: true }
+//         );
+
+//         if (!updatedProduct) {
+//             return res.status(404).json({ message: "Properties not found" });
+//         }
+
+//         res.json({
+//             status: 200,
+//             message: "Properties Updated Successfully",
+//             data: updatedProduct,
+//         });
+//     } catch (error) {
+//         console.error("Error in updating property:", error);
+//         res.status(500).json({ message: "Server error", error });
+//     }
+// };
+
 exports.editProperty = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  res.header("Access-Control-Allow-Origin", "*");
+
+  try {
+    const propertyId = req.params.PropertyId;
+    const userId = req.user._id;
+
+    const property = await Properties.findById(propertyId);
+    if (!property) {
+      return res.status(404).json({ message: "Property not found" });
     }
 
-    res.header("Access-Control-Allow-Origin", "*");
-    try {
-        const propertyId = req.params.PropertyId;
+    let imagePaths = [...property.image];
 
-        // Fetch the current property to check its existing images
-        const property = await Properties.findById(propertyId);
-        if (!property) {
-            return res.status(404).json({ message: "Properties not found" });
-        }
+    // ✅ Replace image logic with array-based upload like `createProperties`
+    if (req.files && req.files.image) {
+      // Delete all old images
+      imagePaths.forEach(imgPath => {
+        const oldImagePath = path.join(__dirname, "../..", imgPath);
+        if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+      });
 
-        // Initialize the array to hold updated image paths
-        let imagePaths = [...property.image];  // Copy the existing images array
+      imagePaths = []; // Reset for new uploads
 
-        // Iterate over the req.body to check each image (image0, image1, etc.)
-        for (let i = 0; i < 4; i++) {
-            const imageField = `image${i}`; // image0, image1, image2, image3
+      req.files.image.forEach(file => {
+        const originalName = file.originalname;
+        const uploadedName = file.filename;
+        const ext = originalName.split(".").pop();
+        const newPath = "uploads/" + uploadedName + "." + ext;
 
-            // Check if there is a file in the current image slot
-            if (req.files && req.files[imageField]) {
-                const newImage = req.files[imageField][0]; // Get the file for the specific image
-
-                // Delete the old image if it exists
-                if (imagePaths[i]) {
-                    const oldImagePath = path.join(__dirname, "../..", imagePaths[i]);
-                    if (fs.existsSync(oldImagePath)) {
-                        fs.unlinkSync(oldImagePath);
-                    }
-                }
-
-                // Process the new image
-                const ext = path.extname(newImage.originalname);
-                const newPath = "uploads/" + newImage.filename + ext;
-
-                // Rename the uploaded file to the new path
-                fs.renameSync("uploads/" + newImage.filename, newPath);
-
-                // Update the image path in the array
-                imagePaths[i] = newPath;
-            }
-        }
-
-        // Update the property with the new image paths
-        const updatedProduct = await Properties.findByIdAndUpdate(
-            propertyId,
-            { ...req.body, image: imagePaths },
-            { new: true, runValidators: true }
-        );
-
-        if (!updatedProduct) {
-            return res.status(404).json({ message: "Properties not found" });
-        }
-
-        res.json({
-            status: 200,
-            message: "Properties Updated Successfully",
-            data: updatedProduct,
-        });
-    } catch (error) {
-        console.error("Error in updating property:", error);
-        res.status(500).json({ message: "Server error", error });
+        fs.renameSync("uploads/" + uploadedName, newPath);
+        imagePaths.push(newPath);
+      });
     }
+
+    // Handle array fields with HTML decoding and JSON parsing
+    const decodeAndParseArray = (raw) => {
+      try {
+        const decoded = he.decode(raw || "");
+        const parsed = JSON.parse(decoded);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (err) {
+        return [];
+      }
+    };
+
+    const rawFields = {
+      Property_Suitable_For: req.body.Property_Suitable_For,
+      Type_of_Water_Supply: req.body.Type_of_Water_Supply,
+      Amenities: req.body.Amenities
+    };
+
+    req.body.Property_Suitable_For = decodeAndParseArray(rawFields.Property_Suitable_For);
+    req.body.Type_of_Water_Supply = decodeAndParseArray(rawFields.Type_of_Water_Supply);
+    req.body.Amenities = decodeAndParseArray(rawFields.Amenities);
+
+    if (typeof req.body.property_belongsTo === "string") {
+      req.body.property_belongsTo = he.decode(req.body.property_belongsTo);
+    }
+
+    req.body.image = imagePaths;
+
+    const updatedProduct = await Properties.findByIdAndUpdate(
+      propertyId,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: "Property not found after update" });
+    }
+
+    const userData = await User.findById(userId).select("-password");
+    const result = updatedProduct.toObject();
+    result.User_data = userData || {};
+
+    res.status(200).json({
+      status: 200,
+      message: "Property Updated Successfully",
+      data: result
+    });
+  } catch (error) {
+    console.error("Error updating property:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
 };
-
 
 exports.createProperties = async (req, res) => {
   const errors = validationResult(req);
@@ -271,7 +377,7 @@ exports.createProperties = async (req, res) => {
   }
 
   try {
-    const userId = req.body.userId; // make sure this is passed in req.body
+    const userId = req.user._id; // make sure this is passed in req.body
 
     // 1. Check how many properties this user already has
     const existingCount = await Properties.countDocuments({ userId });
@@ -331,6 +437,8 @@ try {
   console.log("Failed to decode/parse raw_Amenities", err.message);
   req.body.Amenities = [];
 }
+
+    req.body.User_id = userId
     const newProduct = new Properties(req.body);
     const savedProduct = await newProduct.save();
     
@@ -340,9 +448,12 @@ try {
       }
     } catch (e) {
       savedProduct.property_belongsTo = [];
-    }
+    }    
+    savedProduct.User_data ={};
+    const userData = await User.findById(userId).then((data)=>{
+      savedProduct.User_data=data
+    });
     
-
     res.status(200).json({ status: 200, data: savedProduct });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
