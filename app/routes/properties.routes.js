@@ -43,7 +43,7 @@ module.exports = (app, upload) => {
   //   "/getProductsByCategory", product.getProductsByCategory
   // );
   router.get(
-    "/getProperty/:PropertyId",authenticate, product.getProperty
+    "/getProperty/:PropertyId", product.getProperty
   );
 
   app.use("/api/properties", router);
