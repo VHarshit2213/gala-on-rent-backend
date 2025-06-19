@@ -191,13 +191,13 @@ exports.getProperty = async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
 
   try {
-    const userId = req.user._id; // assuming req.user is set by auth middleware
     const propertyId = req.params.PropertyId;
 
     const property = await Properties.findById(propertyId);
     if (!property) {
       return res.status(404).json({ message: "Property not found" });
     }
+    const userId = property?.User_id; // assuming req.user is set by auth middleware
 
     const userData = await User.findById(userId).select("-password"); // hide sensitive fields like password
 
