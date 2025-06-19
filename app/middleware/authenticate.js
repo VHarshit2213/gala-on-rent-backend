@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-const manageToken = async (user_id, result) => {    
+const manageToken = async (user_id, result) => {      
   var ID = typeof user_id != "object" ? user_id : user_id.id;
   
   const fetchUser = await User.findById(ID);

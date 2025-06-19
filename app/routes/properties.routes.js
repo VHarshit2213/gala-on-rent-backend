@@ -27,20 +27,23 @@ module.exports = (app, upload) => {
     product.createProperties
   );
   router.delete(
-    "/deleteProperty/:PropertyId", product.deleteProperty
+    "/deleteProperty/:PropertyId",authenticate, product.deleteProperty
   );
   router.put(
-    "/editProperty/:PropertyId",Upload_Image, product.editProperty
+    "/editProperty/:PropertyId",Upload_Image,authenticate, product.editProperty
   );
   router.get(
     "/getAllProperties", product.getAllProperties
+  );
+  router.get(
+    "/getAllTokenWiseProperties",authenticate, product.getAllTokenWiseProperties
   );
   // router.get(
   //   "/getProductsByCategory", product.getProductsByCategory
   // );
   router.get(
-    "/getProperty/:PropertyId", product.getProperty
+    "/getProperty/:PropertyId",authenticate, product.getProperty
   );
 
-  app.use("/api/properties",authenticate, router);
+  app.use("/api/properties", router);
 };

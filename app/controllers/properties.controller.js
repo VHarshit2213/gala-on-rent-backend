@@ -52,6 +52,54 @@ exports.getAllProperties = async (req, res) => {
   }
 };
 
+exports.getAllTokenWiseProperties = async (req, res) => {  
+  
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  const userId = req.user._id; // assuming req.user is set by auth middleware
+  res.header("Access-Control-Allow-Origin", "*");
+
+  try {
+    const limit = parseInt(process.env.PAGE_LIMIT) || 20;
+    const page = parseInt(req.query.page) || 1;
+    const skip = (page - 1) * limit;
+
+    const filter = {
+      User_id: userId
+    };
+
+    if (req.query.address) {
+      filter.address = { $regex: req.query.address, $options: "i" };
+    }
+
+    if (req.query.Popular_Area) {
+      filter.Popular_Area = { $regex: req.query.Popular_Area, $options: "i" };
+    }
+
+    const properties = await Properties.find(filter).skip(skip).limit(limit);
+
+    if (properties.length === 0) {
+      return res.status(404).json({ message: "No Properties found" });
+    }
+
+    // Attach user data manually
+    const results = await Promise.all(
+      properties.map(async (prop) => {
+        const user = await User.findById(prop.User_id).select("-password");
+        const propObj = prop.toObject();
+        propObj.User_data = user || null;
+        return propObj;
+      })
+    );
+
+    res.status(200).json({ status: 200, data: results });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
 
 // exports.getProductsByCategory = async (req, res) => {
 //   try {
