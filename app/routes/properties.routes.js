@@ -11,6 +11,7 @@ module.exports = (app, upload) => {
   router.post(
     "/createProperties",
     Upload_Image,
+    authenticate,
     [check("property_belongsTo").not().isEmpty().trim().escape()],
     [check("address").not().isEmpty().trim().escape()],
     [check("looking_to").not().isEmpty().trim().escape()],
