@@ -21,7 +21,13 @@ exports.getAllProperties = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const filter = {};
+    let sort = {};
 
+    if (req.query.Financials === "financials_asc") {
+      sort.Financials = 1;
+    } else if (req.query.Financials === "financials_desc") {
+      sort.Financials = -1;
+    }
     if (req.query.city) {
       filter.city = { $regex: req.query.city, $options: "i" };
     }
@@ -38,7 +44,7 @@ exports.getAllProperties = async (req, res) => {
       filter.type_of_property = { $regex: req.query.type_of_property, $options: "i" };
     }
 
-    const properties = await Properties.find(filter).skip(skip).limit(limit);
+    const properties = await Properties.find(filter).sort(sort).skip(skip).limit(limit);
 
     if (properties.length === 0) {
       return res.status(404).json({ message: "No Properties found" });
