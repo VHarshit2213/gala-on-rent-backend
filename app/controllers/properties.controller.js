@@ -41,8 +41,15 @@ exports.getAllProperties = async (req, res) => {
     }
 
     if (req.query.type_of_property) {
-      filter.type_of_property = { $regex: req.query.type_of_property, $options: "i" };
+      const cleanType = req.query.type_of_property.trim().replace(/\s+/g, ' ');
+      const escapedType = cleanType.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+      filter.type_of_property = {
+        $regex: escapedType,
+        $options: "i"
+      };
     }
+    
 
     const properties = await Properties.find(filter).sort(sort).skip(skip).limit(limit);
 
