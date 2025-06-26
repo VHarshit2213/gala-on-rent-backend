@@ -34,6 +34,10 @@ exports.getAllProperties = async (req, res) => {
       filter.looking_to = { $regex: req.query.looking_to, $options: "i" };
     }
 
+    if (req.query.type_of_property) {
+      filter.type_of_property = { $regex: req.query.type_of_property, $options: "i" };
+    }
+
     const properties = await Properties.find(filter).skip(skip).limit(limit);
 
     if (properties.length === 0) {
