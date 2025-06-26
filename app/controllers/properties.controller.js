@@ -22,12 +22,16 @@ exports.getAllProperties = async (req, res) => {
 
     const filter = {};
 
-    if (req.query.address) {
-      filter.address = { $regex: req.query.address, $options: "i" };
+    if (req.query.city) {
+      filter.city = { $regex: req.query.city, $options: "i" };
     }
 
     if (req.query.Popular_Area) {
       filter.Popular_Area = { $regex: req.query.Popular_Area, $options: "i" };
+    }
+
+    if (req.query.looking_to) {
+      filter.looking_to = { $regex: req.query.looking_to, $options: "i" };
     }
 
     const properties = await Properties.find(filter).skip(skip).limit(limit);
