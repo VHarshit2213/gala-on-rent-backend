@@ -57,6 +57,14 @@ const PropertiesSchema = mongoose.Schema({
     type: Array,
     required: true,
   },
+  city: {
+    type: String,
+    required: true,
+  },
+  pincode: {
+    type: String,
+    required: true,
+  },
   Number_of_Washroom: {
     type: Number,
     required: true,
