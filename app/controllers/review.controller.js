@@ -44,28 +44,28 @@ exports.createReview = async (req, res) => {
   }
 
   try {
-    const userId = req.user?._id || req.body.user_id;
-    const propertyId = req.body.properties_id;
+    // const userId = req.user?._id || req.body.user_id;
+    // const propertyId = req.body.properties_id;
 
     // ✅ Check if the user already reviewed this property
-    const existingReview = await Review.findOne({
-      user_id: userId,
-      properties_id: propertyId,
-    });
+    // const existingReview = await Review.findOne({
+    //   user_id: userId,
+    //   properties_id: propertyId,
+    // });
 
-    if (existingReview) {
-      return res.status(409).json({
-        status: 409,
-        message: "You have already submitted a review for this property.",
-        data: existingReview,
-      });
-    }
+    // if (existingReview) {
+    //   return res.status(409).json({
+    //     status: 409,
+    //     message: "You have already submitted a review for this property.",
+    //     data: existingReview,
+    //   });
+    // }
 
     // ✅ Create and save new review
     const newReview = new Review({
       ...req.body,
       image: imagePath,
-      user_id: userId,
+      // user_id: userId,
     });
 
     const savedReview = await newReview.save();
