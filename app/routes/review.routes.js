@@ -16,7 +16,7 @@ module.exports = (app, upload) => {
     authenticate,
     Upload_Image,
     [
-      check("properties_id").notEmpty(),
+      // check("properties_id").notEmpty(),
       check("name").notEmpty(),
       check("star").notEmpty(),
       check("description").notEmpty(),
