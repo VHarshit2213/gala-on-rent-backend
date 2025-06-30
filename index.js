@@ -26,3 +26,4 @@ app.listen(process.env.PORT, () => {
 
 require("./app/routes/users.routes")(app);
 require("./app/routes/properties.routes")(app, upload);
+require("./app/routes/review.routes")(app, upload);
