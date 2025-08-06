@@ -9,7 +9,7 @@ exports.Signup = async (req, res) => {
   }
   
   res.header("Access-Control-Allow-Origin", "*");
-  User.findOne({ Phone_number: "+91"+req.body.Phone_number }).then(async (user) => {
+  User.findOne({ phone_number: "+91"+req.body.phone_number }).then(async (user) => {
     if (user) {
       res.json({
         message: "this Phone_number is Already used",
@@ -19,7 +19,7 @@ exports.Signup = async (req, res) => {
       const user = new User(
         req.body
       );
-      user.Phone_number = "+91"+req.body.Phone_number
+      user.phone_number = "+91"+req.body.phone_number
 
       try {
         const savedUsers = await user.save();
@@ -27,6 +27,7 @@ exports.Signup = async (req, res) => {
           message: "User Created Successfully",
           status: 200,
           data: savedUsers,
+          token: jwt.sign({ id: savedUsers._id }, "dont_be_oversmart"),
         });
       } catch (err) {
         res.json({ message: err, status: 400 });
@@ -39,22 +40,21 @@ exports.Signin = async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
 
   try {
-    const { Phone_number, uniqueCode } = req.body;
+    const { person_name, password } = req.body;
 
     // Find user by phone number
-    const user = await User.findOne({ Phone_number });
-
+    const user = await User.findOne({ $or: [{ person_name: person_name }, { email: person_name }] });
     if (!user) {
       return res.json({
-        message: "Phone number not found",
+        message: "User not found",
         status: 400,
       });
     }
 
     // Check if provided OTP matches the one in DB
-    if (!uniqueCode || uniqueCode !== user.uniqueCode) {
+    if (!password || password !== user.password) {
       return res.json({
-        message: "Invalid or missing uniqueCode",
+        message: "Invalid password",
         status: 400,
       });
     }

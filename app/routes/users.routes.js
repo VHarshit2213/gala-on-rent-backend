@@ -1,3 +1,4 @@
+const {check} = require("express-validator");
 module.exports = (app) => {
   const { check, validationResult } = require("express-validator");
   const user = require("../controllers/user.controller.js");
@@ -9,7 +10,10 @@ module.exports = (app) => {
     [
       check("Property_belongsto").not().isEmpty().trim().escape(),
       check("person_name").not().isEmpty().trim().escape(),
-      check("Phone_number").not().isEmpty(),
+      check("user_name").not().isEmpty().trim().escape(),
+      check("email").not().isEmpty().trim().escape(),
+      check("phone_number").not().isEmpty(),
+      check("password").not().isEmpty().trim().escape(),
       check("user_type").not().isEmpty(),
       check("city").not().isEmpty(),
     ],
@@ -19,8 +23,8 @@ module.exports = (app) => {
   router.post(
     "/Signin",
     [
-      check("Phone_number").not().isEmpty().trim().escape(),
-      check("uniqueCode").not().isEmpty().trim().escape(),
+      check("person_name").not().isEmpty().trim().escape(),
+      check("password").not().isEmpty().trim().escape(),
     ],
     user.Signin
   );

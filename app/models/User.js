@@ -6,11 +6,15 @@ const UserSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  user_name: {
+    type: String,
+    required: true,
+  },
   Property_belongsto: {
     type: String,
     required: true,
   },
-  Phone_number: {
+  phone_number: {
     type: String,
     required: true,
   },
@@ -34,10 +38,14 @@ const UserSchema = mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  uniqueCode:{
+  password: {
     type: String,
     required: true,
   },
+  // uniqueCode:{
+  //   type: String,
+  //   required: true,
+  // },
 });
 
 module.exports = mongoose.model("Users", UserSchema);

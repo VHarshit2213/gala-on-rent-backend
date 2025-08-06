@@ -1,3 +1,4 @@
+const {check} = require("express-validator");
 module.exports = (app, upload) => {
   const { check, validationResult } = require("express-validator");
   const product = require("../controllers/properties.controller.js");
@@ -25,6 +26,8 @@ module.exports = (app, upload) => {
     [check("Number_of_Washroom").not().isEmpty().trim().escape()],
     [check("Financials").not().isEmpty().trim().escape()],
     [check("Amenities").not().isEmpty().trim().escape()],
+    [check("isAcceptTermsCondition").not().isEmpty().trim().escape()],
+    [check("registeredBy").not().isEmpty().trim().escape()],
     product.createProperties
   );
   router.delete(

@@ -83,6 +83,14 @@ const PropertiesSchema = mongoose.Schema({
     default: Date.now
     // required: true,
   },
+  isAcceptTermsCondition:{
+    type: Boolean,
+    required: true,
+  },
+  registeredBy:{
+    type: String,
+    required: true,
+  }
 });
 
 module.exports = mongoose.model("Properties", PropertiesSchema);
