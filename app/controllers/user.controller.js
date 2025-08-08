@@ -9,7 +9,7 @@ exports.Signup = async (req, res) => {
   }
   
   res.header("Access-Control-Allow-Origin", "*");
-  User.findOne({ phone_number: "+91"+req.body.phone_number }).then(async (user) => {
+  User.findOne({ phone_number: req.body.phone_number }).then(async (user) => {
     if (user) {
       res.json({
         message: "this Phone_number is Already used",
@@ -19,7 +19,7 @@ exports.Signup = async (req, res) => {
       const user = new User(
         req.body
       );
-      user.phone_number = "+91"+req.body.phone_number
+      user.phone_number = req.body.phone_number
 
       try {
         const savedUsers = await user.save();
@@ -41,9 +41,12 @@ exports.Signin = async (req, res) => {
 
   try {
     const { person_name, password } = req.body;
+    console.log({person_name, password })
 
     // Find user by phone number
-    const user = await User.findOne({ $or: [{ person_name: person_name }, { email: person_name }] });
+    const user = await User.findOne({ $or: [{ person_name: person_name }, { user_name: person_name }, { email: person_name }] });
+
+    console.log(user);
     if (!user) {
       return res.json({
         message: "User not found",
