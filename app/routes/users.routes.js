@@ -44,5 +44,9 @@ module.exports = (app) => {
     "/getAllUsers",authenticate, user.getAllUsers
   );
 
+  router.get(
+    "/getAllagents", user.getAllAgentUsers
+  );
+
   app.use("/api/user", router);
 };

@@ -177,3 +177,52 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+exports.getAllAgentUsers = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(process.env.PAGE_LIMIT) || 10;
+
+    // Base filter for agents
+    const filter = { Property_belongsto: "I Am Agent" };
+
+    // Optional city filter
+    if (req.query.city) {
+      filter.city = req.query.city;
+    }
+
+    if (page > 1) {
+      const previousUsers = await User.find(filter)
+        .sort({ _id: -1 })
+        .limit((page - 1) * limit);
+
+      const lastUser = previousUsers[previousUsers.length - 1];
+      if (lastUser) {
+        filter._id = { $lt: lastUser._id };
+      }
+    }
+
+    const users = await User.find(filter)
+      .select("-password")
+      .sort({ _id: -1 })
+      .limit(limit);
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: "No agent users found" });
+    }
+
+    const totalUsers = await User.countDocuments(filter);
+
+    res.json({
+      status: 200,
+      currentPage: page,
+      totalPages: Math.ceil(totalUsers / limit),
+      totalItems: totalUsers,
+      data: users,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+
+
