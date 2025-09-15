@@ -17,7 +17,7 @@ module.exports = (app, upload) => {
     [check("address").not().isEmpty().trim().escape()],
     [check("looking_to").not().isEmpty().trim().escape()],
     [check("Carpet_Area").not().isEmpty().trim().escape()],
-    [check("Other_Area").not().isEmpty().trim().escape()],
+    // [check("Other_Area").not().isEmpty().trim().escape()],
     [check("Popular_Area").not().isEmpty().trim().escape()],
     [check("type_of_property").not().isEmpty().trim().escape()],
     [check("Property_Suitable_For").not().isEmpty().trim().escape()],

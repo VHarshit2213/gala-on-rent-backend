@@ -23,7 +23,7 @@ const PropertiesSchema = mongoose.Schema({
   },
   Other_Area: {
     type: String,
-    required: true,
+    required: false,
   },
   User_id: {
     type: String,
@@ -43,7 +43,7 @@ const PropertiesSchema = mongoose.Schema({
   },
   About_the_property : {
     type: String,
-    required: true,
+    required: false,
   },
   Property_Suitable_For: {
     type: Array,
