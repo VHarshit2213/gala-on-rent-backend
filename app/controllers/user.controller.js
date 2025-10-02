@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
 const { check, validationResult } = require("express-validator");
 const User = require("../models/User");
-
+const sendMail = require("../utils/mailer.js").sendMail;
+const registrationEmailTemplate = require("../utils/emailTemplates.js").registrationEmailTemplate;
 exports.Signup = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -23,6 +24,11 @@ exports.Signup = async (req, res) => {
 
       try {
         const savedUsers = await user.save();
+        await sendMail({
+          to: savedUsers.email, 
+          subject: "Welcome to Gala On Rent 🎉",
+          html: registrationEmailTemplate(savedUsers.person_name || "User"),
+        });
         res.json({
           message: "User Created Successfully",
           status: 200,
@@ -30,6 +36,7 @@ exports.Signup = async (req, res) => {
           token: jwt.sign({ id: savedUsers._id }, "dont_be_oversmart"),
         });
       } catch (err) {
+        console.log(err);
         res.json({ message: err, status: 400 });
       }
     }
@@ -41,7 +48,7 @@ exports.Signin = async (req, res) => {
 
   try {
     const { person_name, password } = req.body;
-    console.log({person_name, password })
+    console.log({ person_name, password })
 
     // Find user by phone number
     const user = await User.findOne({ $or: [{ person_name: person_name }, { user_name: person_name }, { email: person_name }] });
