@@ -16,6 +16,7 @@ module.exports = (app) => {
       check("password").not().isEmpty().trim().escape(),
       check("user_type").not().isEmpty(),
       check("city").not().isEmpty(),
+      check("state").not().isEmpty(),
     ],
     user.Signup
   );
