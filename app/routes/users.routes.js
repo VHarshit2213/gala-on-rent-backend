@@ -1,4 +1,4 @@
-const {check} = require("express-validator");
+const { check } = require("express-validator");
 module.exports = (app) => {
   const { check, validationResult } = require("express-validator");
   const user = require("../controllers/user.controller.js");
@@ -18,7 +18,7 @@ module.exports = (app) => {
       check("city").not().isEmpty(),
       check("state").not().isEmpty(),
     ],
-    user.Signup
+    user.Signup,
   );
 
   router.post(
@@ -27,27 +27,22 @@ module.exports = (app) => {
       check("person_name").not().isEmpty().trim().escape(),
       check("password").not().isEmpty().trim().escape(),
     ],
-    user.Signin
+    user.Signin,
   );
   router.put(
     "/Edituser/:userId",
     authenticate,
     [check("userId").not().isEmpty().trim().escape()],
-    user.Edituser
+    user.Edituser,
   );
-  router.delete(
-    "/Deleteuser/:userId", authenticate, user.deleteUser
-  );
-  router.get(
-    "/getUser/:userId",authenticate, user.getUser
-  );
-  router.get(
-    "/getAllUsers",authenticate, user.getAllUsers
-  );
+  router.delete("/Deleteuser/:userId", authenticate, user.deleteUser);
+  router.get("/getUser/:userId", authenticate, user.getUser);
+  // router.get("/getAllUsers", authenticate, user.getAllUsers);
+  router.get("/getAllUsers", user.getAllUsers);
+  router.put("/update/:userId", user.updateUser);
+  router.delete("/delete/:userId", user.adminDeleteUser);
 
-  router.get(
-    "/getAllagents", user.getAllAgentUsers
-  );
+  router.get("/getAllagents", user.getAllAgentUsers);
 
   app.use("/api/user", router);
 };
