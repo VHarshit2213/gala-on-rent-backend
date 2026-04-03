@@ -2,13 +2,14 @@ const jwt = require("jsonwebtoken");
 const { check, validationResult } = require("express-validator");
 const User = require("../models/User");
 const sendMail = require("../utils/mailer.js").sendMail;
-const registrationEmailTemplate = require("../utils/emailTemplates.js").registrationEmailTemplate;
+const registrationEmailTemplate =
+  require("../utils/emailTemplates.js").registrationEmailTemplate;
 exports.Signup = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-  
+
   res.header("Access-Control-Allow-Origin", "*");
   User.findOne({ phone_number: req.body.phone_number }).then(async (user) => {
     if (user) {
@@ -17,15 +18,13 @@ exports.Signup = async (req, res) => {
         status: 400,
       });
     } else {
-      const user = new User(
-        req.body
-      );
-      user.phone_number = req.body.phone_number
+      const user = new User(req.body);
+      user.phone_number = req.body.phone_number;
 
       try {
         const savedUsers = await user.save();
         await sendMail({
-          to: savedUsers.email, 
+          to: savedUsers.email,
           subject: "Welcome to Gala On Rent 🎉",
           html: registrationEmailTemplate(savedUsers.person_name || "User"),
         });
@@ -48,10 +47,16 @@ exports.Signin = async (req, res) => {
 
   try {
     const { person_name, password } = req.body;
-    console.log({ person_name, password })
+    console.log({ person_name, password });
 
     // Find user by phone number
-    const user = await User.findOne({ $or: [{ person_name: person_name }, { user_name: person_name }, { email: person_name }] });
+    const user = await User.findOne({
+      $or: [
+        { person_name: person_name },
+        { user_name: person_name },
+        { email: person_name },
+      ],
+    });
 
     console.log(user);
     if (!user) {
@@ -76,7 +81,6 @@ exports.Signin = async (req, res) => {
       token: jwt.sign({ id: user._id }, "dont_be_oversmart"),
       data: user,
     });
-
   } catch (err) {
     console.error(err);
     return res.json({
@@ -86,7 +90,6 @@ exports.Signin = async (req, res) => {
   }
 };
 
-
 exports.Edituser = async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
   try {
@@ -94,7 +97,7 @@ exports.Edituser = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       req.body, // Updated data from request body
-      { new: true, runValidators: true } // Return updated document
+      { new: true, runValidators: true }, // Return updated document
     );
 
     if (!updatedUser) {
@@ -145,43 +148,81 @@ exports.getUser = async (req, res) => {
 
 exports.getAllUsers = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = process.env.PAGE_LIMIT;
-    const filter = {};
+    // const page = parseInt(req.query.page) || 1;
+    // const limit = process.env.PAGE_LIMIT;
+    // const filter = {};
 
-    if (page > 1) {
-      // Find previous users to get last _id for cursor pagination
-      const previousUsers = await User.find()
-        .sort({ _id: -1 })
-        .limit((page - 1) * limit);
+    // if (page > 1) {
+    //   // Find previous users to get last _id for cursor pagination
+    //   const previousUsers = await User.find()
+    //     .sort({ _id: -1 })
+    //     .limit((page - 1) * limit);
 
-      const lastUser = previousUsers[previousUsers.length - 1];
-      if (lastUser) {
-        filter._id = { $lt: lastUser._id };
-      }
-    }
+    //   const lastUser = previousUsers[previousUsers.length - 1];
+    //   if (lastUser) {
+    //     filter._id = { $lt: lastUser._id };
+    //   }
+    // }
 
-    const users = await User.find(filter)
-      .select("-password")
-      .sort({ _id: -1 })
-      .limit(limit);
+    const users = await User.find().select("-password").sort({ _id: -1 });
+    // .limit(limit);
 
     if (users.length === 0) {
       return res.status(404).json({ message: "No users found" });
     }
 
-    const totalUsers = await User.countDocuments();
+    // const totalUsers = await User.countDocuments();
 
     res.json({
       status: 200,
-      currentPage: page,
-      totalPages: Math.ceil(totalUsers / limit),
-      totalItems: totalUsers,
+      // currentPage: page,
+      // totalPages: Math.ceil(totalUsers / limit),
+      // totalItems: totalUsers,
       data: users,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
+};
+
+exports.updateUser = async (req, res) => {
+  const user = await User.findById(req.params.userId);
+
+  if (!user) {
+    return res.status(404).json({ message: "user not found" });
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    req.params.userId,
+    req.body,
+    {
+      new: true, // ✅ return updated document
+      runValidators: true, // ✅ apply schema validation
+    },
+  ).select("-password");
+  if (!updatedUser) {
+    res.status(500).json({ message: "failed to update user", error });
+  }
+  res.json({
+    status: 200,
+    data: updatedUser,
+  });
+};
+
+exports.adminDeleteUser = async (req, res) => {
+  const user = await User.findById(req.params.userId);
+
+  if (!user) {
+    return res.status(404).json({ message: "user not found" });
+  }
+
+  await User.findByIdAndDelete(req.params.userId);
+
+  res.json({
+    status: 200,
+    message: "user delete successfully",
+    data: null,
+  });
 };
 
 exports.getAllAgentUsers = async (req, res) => {
@@ -230,5 +271,3 @@ exports.getAllAgentUsers = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
-
-
