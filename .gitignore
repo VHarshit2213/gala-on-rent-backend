@@ -15,6 +15,7 @@ dist/
 
 # Log files
 *.log
+.env
 
 # Package files
 *.jar
@@ -49,4 +50,4 @@ Thumbs.db
 *.mov
 *.wmv
 
-.env
+config.bat

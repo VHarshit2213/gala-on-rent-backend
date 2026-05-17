@@ -199,43 +199,65 @@ exports.getUser = async (req, res) => {
 
 exports.getAllUsers = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = process.env.PAGE_LIMIT;
-    const filter = {};
-
-    if (page > 1) {
-      // Find previous users to get last _id for cursor pagination
-      const previousUsers = await User.find()
-        .sort({ _id: -1 })
-        .limit((page - 1) * limit);
-
-      const lastUser = previousUsers[previousUsers.length - 1];
-      if (lastUser) {
-        filter._id = { $lt: lastUser._id };
-      }
-    }
-
-    const users = await User.find(filter)
-      .select("-password")
-      .sort({ _id: -1 })
-      .limit(limit);
+    const users = await User.find().select("-password").sort({ _id: -1 });
 
     if (users.length === 0) {
       return res.status(404).json({ message: "No users found" });
     }
 
-    const totalUsers = await User.countDocuments();
-
     res.json({
       status: 200,
-      currentPage: page,
-      totalPages: Math.ceil(totalUsers / limit),
-      totalItems: totalUsers,
       data: users,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
+};
+
+exports.updateUser = async (req, res) => {
+  const user = await User.findById(req.params.userId);
+
+  if (!user) {
+    return res.status(404).json({ message: "user not found" });
+  }
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.userId,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(500).json({ message: "failed to update user" });
+    }
+
+    res.json({
+      status: 200,
+      data: updatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "failed to update user", error });
+  }
+};
+
+exports.adminDeleteUser = async (req, res) => {
+  const user = await User.findById(req.params.userId);
+
+  if (!user) {
+    return res.status(404).json({ message: "user not found" });
+  }
+
+  await User.findByIdAndDelete(req.params.userId);
+
+  res.json({
+    status: 200,
+    message: "user delete successfully",
+    data: null,
+  });
 };
 
 exports.getAllAgentUsers = async (req, res) => {
@@ -284,4 +306,3 @@ exports.getAllAgentUsers = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
-
