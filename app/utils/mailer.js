@@ -1,7 +1,7 @@
-import nodemailer from "nodemailer";
+const nodemailer = require("nodemailer");
 
 // Send an email using SMTP credentials from environment variables
-export async function sendMail({ to, subject, html }) {
+async function sendMail({ to, subject, html }) {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
   const port = Number(process.env.SMTP_PORT) || 465;
   const secure = port === 465; // 465 = SSL, 587 = STARTTLS
@@ -25,3 +25,5 @@ export async function sendMail({ to, subject, html }) {
     html,
   });
 }
+
+module.exports = { sendMail };

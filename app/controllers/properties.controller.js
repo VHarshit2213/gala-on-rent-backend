@@ -49,6 +49,14 @@ exports.getAllProperties = async (req, res) => {
         $options: "i"
       };
     }
+
+    if (req.query.uniqueCode) {
+      const seller = await User.findOne({
+        uniqueCode: String(req.query.uniqueCode).trim().toUpperCase(),
+      }).select("_id");
+
+      filter.User_id = seller ? String(seller._id) : null;
+    }
     
 
     const properties = await Properties.find(filter).sort(sort).skip(skip).limit(limit);

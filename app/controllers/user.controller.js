@@ -2,7 +2,53 @@ const jwt = require("jsonwebtoken");
 const { check, validationResult } = require("express-validator");
 const User = require("../models/User");
 const sendMail = require("../utils/mailer.js").sendMail;
-const registrationEmailTemplate = require("../utils/emailTemplates.js").registrationEmailTemplate;
+const {
+  registrationEmailTemplate,
+  sellerRegistrationEmailTemplate,
+} = require("../utils/emailTemplates.js");
+
+const STATE_CODES = {
+  gujarat: "GJ",
+};
+
+function isSeller(userType) {
+  return String(userType || "").toLowerCase() === "seller";
+}
+
+function getStateCode(state) {
+  const normalizedState = String(state || "").trim().toLowerCase();
+  if (STATE_CODES[normalizedState]) {
+    return STATE_CODES[normalizedState];
+  }
+
+  return String(state || "")
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function getCityCode(city) {
+  return String(city || "")
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .toUpperCase();
+}
+
+function generateSellerCode({ state, city }) {
+  const prefix = `${getStateCode(state)}${getCityCode(city)}` || "GJSELLER";
+  const randomDigits = Math.floor(10000 + Math.random() * 90000);
+  return `${prefix}${randomDigits}`;
+}
+
+async function generateUniqueSellerCode(user) {
+  let sellerCode;
+
+  do {
+    sellerCode = generateSellerCode(user);
+  } while (await User.exists({ uniqueCode: sellerCode }));
+
+  return sellerCode;
+}
+
 exports.Signup = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -23,11 +69,19 @@ exports.Signup = async (req, res) => {
       user.phone_number = req.body.phone_number
 
       try {
+        if (isSeller(user.user_type)) {
+          user.uniqueCode = await generateUniqueSellerCode(user);
+        }
+
         const savedUsers = await user.save();
+        const isSellerUser = isSeller(savedUsers.user_type);
+
         await sendMail({
           to: savedUsers.email, 
-          subject: "Welcome to Gala On Rent 🎉",
-          html: registrationEmailTemplate(savedUsers.person_name || "User"),
+          subject: isSellerUser ? "Your Gala On Rent Seller Code" : "Welcome to Gala On Rent",
+          html: isSellerUser
+            ? sellerRegistrationEmailTemplate(savedUsers.person_name || "Seller", savedUsers.uniqueCode)
+            : registrationEmailTemplate(savedUsers.person_name || "User"),
         });
         res.json({
           message: "User Created Successfully",
@@ -230,5 +284,4 @@ exports.getAllAgentUsers = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
-
 

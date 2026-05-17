@@ -46,10 +46,11 @@ const UserSchema = mongoose.Schema({
     type: String,
     required: true,
   },
-  // uniqueCode:{
-  //   type: String,
-  //   required: true,
-  // },
+  uniqueCode: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
 });
 
 module.exports = mongoose.model("Users", UserSchema);
