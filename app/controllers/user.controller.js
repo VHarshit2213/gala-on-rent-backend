@@ -12,7 +12,8 @@ const STATE_CODES = {
 };
 
 function isSeller(userType) {
-  return String(userType || "").toLowerCase() === "seller";
+  const normalizedType = String(userType || "").toLowerCase();
+  return normalizedType === "sell" || normalizedType === "rent";
 }
 
 function getStateCode(state) {
